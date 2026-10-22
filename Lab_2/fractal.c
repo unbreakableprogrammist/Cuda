@@ -11,8 +11,8 @@
 int main(int argc, char *argv[])
 { 
     short   x, y, count;
-    long double zr, zi, betar, betai, a, b;
-    long double rsquared, isquared, mr, mi, msquared;
+    double zr, zi, betar, betai, a, b;
+    double rsquared, isquared, mr, mi, msquared;
 
     double LEFT, BOTTOM, RIGHT, TOP, SIZE, MaxIters;
 
