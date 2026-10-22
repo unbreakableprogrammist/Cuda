@@ -1,63 +1,74 @@
 # CUDA Course
 
-This repository contains my projects, exercises, and templates for the CUDA course at university.
+Repository for CUDA programming coursework, exercises, and reusable examples developed during university studies.
 
-## Repository Contents
+## Current contents
 
-- **Projects** — Coursework and practical CUDA projects.
-- **Templates** — Starter templates and reusable boilerplate for assignments.
-- **Exercises** — Small examples and experiments for learning CUDA concepts.
+At the moment, the repository contains a ready-to-use CUDA C/C++ template:
 
-## Topics
+- [`template.cu`](./template.cu) — a complete example demonstrating the basic CUDA workflow:
+  - CUDA error handling with the `CUDA_CHECK` macro,
+  - defining and launching a GPU kernel,
+  - calculating a thread's global index using `blockIdx`, `blockDim`, and `threadIdx`,
+  - allocating host and device memory,
+  - copying data between CPU and GPU,
+  - synchronizing the device and checking kernel errors,
+  - copying results back to the CPU,
+  - releasing allocated resources.
 
-The repository may include work related to:
+The example initializes an array of integers on the CPU and then doubles every element on the GPU.
 
-- CUDA C/C++ programming
-- GPU programming fundamentals
-- Kernels and thread hierarchies
-- Blocks, grids, and memory management
-- Global, shared, constant, and unified memory
-- Synchronization and concurrency
-- Performance optimization
-- Parallel algorithms
+## Requirements
 
-## Getting Started
+- An NVIDIA GPU with CUDA support
+- NVIDIA drivers compatible with the installed CUDA Toolkit
+- NVIDIA CUDA Toolkit, including `nvcc`
+- A supported C/C++ development environment
 
-### Prerequisites
+The project can be built on Linux, Windows, or WSL, provided that the CUDA Toolkit and drivers are configured correctly.
 
-- NVIDIA GPU with CUDA support
-- NVIDIA CUDA Toolkit
-- A C/C++ compiler supported by the installed CUDA Toolkit
-- Linux, Windows, or WSL with the required NVIDIA drivers
+## Building and running the template
 
-### Building a CUDA Program
-
-From a project directory containing a `.cu` file, compile it with `nvcc`:
+From the repository root, compile the CUDA source file with `nvcc`:
 
 ```bash
-nvcc main.cu -o main
-./main
+nvcc template.cu -o template
+./template
 ```
 
-The exact build commands may differ between projects. Refer to each project's documentation and build configuration for details.
+On Windows, run the generated executable as appropriate for your environment:
 
-## Project Structure
+```powershell
+nvcc template.cu -o template.exe
+.\template.exe
+```
 
-The repository is organized as coursework develops. Individual projects and templates may contain their own source files, build instructions, and notes.
+The program should print the values after GPU processing:
 
 ```text
-Cuda/
-├── projects/     # Course projects
-├── templates/    # Starter templates and boilerplate
-├── exercises/    # Practice exercises and examples
-└── README.md
+Wyniki po obliczeniach na GPU:
+0 2 4 6 8 10 12 14 16 18
 ```
 
-> Directory names may change as the course progresses.
+## CUDA concepts demonstrated
+
+The template is intentionally focused on the fundamentals needed for first CUDA programs:
+
+- **Host and device code** — `main` runs on the CPU, while `myKernel` runs on the GPU.
+- **Kernels** — functions marked with `__global__` are launched using CUDA's `<<<...>>>` syntax.
+- **Thread indexing** — each thread computes a unique position in the processed array.
+- **Grid and block configuration** — the number of blocks is calculated from the data size and the selected block size.
+- **Explicit memory management** — data is allocated with `malloc` on the host and `cudaMalloc` on the device.
+- **Memory transfers** — `cudaMemcpy` is used to transfer data in both directions.
+- **Error checking and synchronization** — CUDA API calls and kernel execution are checked explicitly.
+
+## Repository development
+
+As the course progresses, additional projects, exercises, and examples may be added. Each larger assignment should include its own build instructions and documentation where necessary.
 
 ## Notes
 
-This repository is primarily intended for personal university coursework, experimentation, and reference. Code may be updated, refactored, or reorganized throughout the course.
+This repository is intended primarily for university coursework, experimentation, and learning. The code may be extended or reorganized as new CUDA topics are introduced.
 
 ## License
 
