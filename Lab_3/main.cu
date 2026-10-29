@@ -63,8 +63,21 @@ int main()
 
 //  Calculate number of days with any rainfall
     {
-    // ToDo
-    // Hint: inner_product, plus<int>, not_equal_to<int>
+        // 1 1 1 1 2 5 5
+        //   1 1 1 1 2 5
+        // Hint: inner_product, plus<int>, not_equal_to<int>
+        // wynik = start Op1 (A_0 Op2 B_0) Op1 (A_1 Op2 B_1) ..
+        // Przesunięcie o +1 sprawia, że porównujemy każdy element z jego lewym sąsiadem.
+        // Op2 (not_equal_to) zwraca 1 przy wykryciu zmiany dnia, a Op1 (plus) dodaje te jedynki do sumy.
+        // Wartość 'start = 1' uwzględnia pierwszy dzień, który nie ma poprzednika.
+        int result = thrust::inner_product(
+            data.day.begin() + 1,        // Początek zakresu A (od drugiego elementu)
+            data.day.end(),              // Koniec zakresu A
+            data.day.begin(),            // Początek zakresu B (od pierwszego elementu; długość bierze z zakresu A)
+            1,                           // start (wartość początkowa akumulatora)
+            thrust::plus<int>(),         // Op1: agreguje wyniki cząstkowe (dodawanie jedynek)
+            thrust::not_equal_to<int>()  // Op2: funkcja na parach (1 gdy A_i != B_i, 0 gdy równe)
+        );
     }
 
 //  Calculate total rainfall at each site
