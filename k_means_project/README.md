@@ -61,6 +61,37 @@ Program realizuje trzy tryby obliczeniowe wybierane parametrem linii poleceń (`
      * **Wyliczenie nowych centroidów bez sortowania danych:** Zamiast sortować punkty według klastrów, zostawiamy wszystkie dane w ich pierwotnym, ciągłym układzie SoA i liczymy nowe średnie osobno dla każdego z $k$ klastrów. Najpierw za pomocą `thrust::count` sprawdzamy, ile punktów w tablicy `labels` ma przypisany dany klaster `c`. Następnie dla każdego wymiaru przechodzimy liniowo przez odpowiedni fragment tablicy `data` z prostym warunkiem (`thrust::inner_product`): jeśli punkt należy do klastra `c`, dodaj jego współrzędną do sumy; w przeciwnym razie dodaj zero. Na koniec dzielimy zebraną sumę przez liczbę punktów w klastrze (zostawiając stary centroid przy pustym klastrze) i kopiujemy nowe współrzędne do `__constant__`.
      * **Dlaczego rezygnujemy z sortowania:** Przy skali do $50\text{ mln}$ punktów i $d = 20$ główna tablica zajmuje ok. $8\text{ GB}$ pamięci. Klasyczne podejście z sortowaniem wymagałoby alokacji dodatkowych wielkich tablic na klucze, indeksy i pamięć roboczą (ryzyko błędu *Out Of Memory* na karcie), a po posortowaniu indeksów wątki musiałyby skakać po losowych miejscach w pamięci, tracąc koalescencję odczytów. Nasze podejście zużywa zero dodatkowej pamięci na kopie tablic i zawsze czyta dane po kolei.
 
+### Optymalizacja w czasie kompilacji: metaprogramowanie szablonowe (`template <int D>`)
+
+Ponieważ ze specyfikacji zadania wiemy, że liczba wymiarów $d$ zawsze mieści się w przedziale $[1, 20]$, możemy przenieść wiedzę o wymiarze z czasu wykonania programu (*runtime*) do czasu kompilacji (*compile-time*). Zamiast przekazywać `d` jako zwykłą zmienną do kernela, czynimy ją parametrem szablonu `template <int D>`, dzięki czemu kompilator generuje 20 wyspecjalizowanych wersji funkcji - osobno dla każdego wymiaru.
+
+#### Dlaczego działa to szybciej na GPU?
+* **Uniknięcie ucieczki danych z rejestrów (*Register Spilling*):** Sprzętowe rejestry procesora GPU nie mają adresów jak zwykła pamięć i nie potrafią być indeksowane dynamicznie zmienną w pętli (np. `punkt[dim]`). Gdy rozmiar lokalnej tablicy współrzędnych punktu zależy od zmiennej `d`, kompilator nie może umieścić jej w rejestrach i przenosi ją do pamieci lokalnej, która fizycznie leży w wolnym VRAM-ie. Dzięki stałej szablonu `D` oraz dyrektywie `#pragma unroll` kompilator całkowicie rozwija pętle po wymiarach, zamieniając dynamiczne indeksy na stałe (`punkt[0]`, `punkt[1]`, ...), co pozwala trzymać współrzędne w najszybszych rejestrach karty.
+* **Eliminacja narzutu obsługi pętli:** Rozwinięcie pętli usuwa instrukcje inkrementacji licznika oraz sprawdzania warunku stopu przy każdym porównywaniu punktu z kolejnymi centroidami.
+
+#### Rekurencja szablonów zamiast ręcznego bloku `switch`
+Ponieważ dokładną wartość `d` poznajemy dopiero po wczytaniu nagłówka pliku wejściowego, do uruchomienia właściwej wersji kernela wykorzystujemy **rekurencję szablonów**. Kompilator sam generuje w czasie kompilacji łańcuch wywołań od `D = 20` w dół aż do specjalizacji bazowej dla `D = 0`, która zatrzymuje rekurencję:
+
+```cpp
+// Krok ogólny: obsłuż wymiar D albo przekaż niżej do D - 1
+template <int D>
+struct Launcher {
+    static void run(int runtime_d, /* argumenty kernela */) {
+        if (runtime_d == D) {
+            mojKernel<D><<<bloki, watki>>>(/* argumenty */);
+        } else {
+            Launcher<D - 1>::run(runtime_d, /* argumenty */);
+        }
+    }
+};
+
+// Warunek stopu (specjalizacja dla D = 0): koniec odliczania
+template <>
+struct Launcher<0> {
+    static void run(int, /* argumenty */) {} 
+};
+```
+
 ---
 
 ## 4. Interfejs programu i formaty danych
