@@ -2,73 +2,105 @@
 
 Repository for CUDA programming coursework, exercises, and reusable examples developed during university studies.
 
-## Current contents
+## Projects
 
-At the moment, the repository contains a ready-to-use CUDA C/C++ template:
+### [`template.cu`](./template.cu) — CUDA fundamentals
 
-- [`template.cu`](./template.cu) — a complete example demonstrating the basic CUDA workflow:
-  - CUDA error handling with the `CUDA_CHECK` macro,
-  - defining and launching a GPU kernel,
-  - calculating a thread's global index using `blockIdx`, `blockDim`, and `threadIdx`,
-  - allocating host and device memory,
-  - copying data between CPU and GPU,
-  - synchronizing the device and checking kernel errors,
-  - copying results back to the CPU,
-  - releasing allocated resources.
+A complete introductory CUDA C++ example that doubles an integer array on the GPU. It demonstrates:
 
-The example initializes an array of integers on the CPU and then doubles every element on the GPU.
+- CUDA kernels and the `<<<grid, block>>>` launch syntax,
+- host and device memory management with `malloc`, `cudaMalloc`, and `cudaFree`,
+- CPU/GPU data transfers with `cudaMemcpy`,
+- thread indexing with `blockIdx`, `blockDim`, and `threadIdx`,
+- CUDA error handling with `CUDA_CHECK`,
+- kernel synchronization and result verification.
+
+### [`Lab_2`](./Lab_2) — GPU fractal computation
+
+A CUDA C++ implementation of a fractal renderer that distributes pixel calculations across two-dimensional CUDA thread blocks. The directory also includes [`fractal.c`](./Lab_2/fractal.c), a sequential C reference implementation.
+
+Technologies and concepts:
+
+- CUDA C++ and the CUDA Runtime API,
+- GPU kernels and two-dimensional grids/blocks,
+- host/device memory allocation and transfers,
+- CMake with C++20/CUDA language support,
+- comparison of sequential CPU and parallel GPU computation.
+
+### [`Lab_3`](./Lab_3) — NVIDIA Thrust algorithms
+
+Exercises using NVIDIA Thrust to process rainfall time-series data stored in CUDA device vectors. The examples cover data aggregation by day and site and introduce parallel algorithms such as `inner_product`, `sort_by_key`, `reduce_by_key`, `count`, and binary searches.
+
+Technologies and concepts:
+
+- CUDA C++,
+- NVIDIA Thrust and `thrust::device_vector`,
+- parallel reductions, sorting, counting, and searching,
+- array of structures (AoS) and structure of arrays (SoA) data models,
+- CMake with C++20/CUDA language support.
+
+### [`k_means_project`](./k_means_project) — Parallel k-means specification
+
+A project specification and implementation plan for a CUDA-based k-means clustering algorithm, including a sequential CPU reference and two GPU variants:
+
+- `cpu` — sequential C/C++ implementation,
+- `gpu1` — custom CUDA kernels with shared-memory reductions,
+- `gpu2` — NVIDIA Thrust-based parallel algorithms.
+
+The documentation covers large multidimensional datasets, AoS-to-SoA data transformation, coalesced memory access, constant memory for centroids, CUDA error handling, text and binary input formats, and performance measurement. See the [project README](./k_means_project/README.md) and [technical specification](./k_means_project/projekt.pdf) for details.
+
+## Technologies
+
+- **C and C++** — sequential reference programs and host-side application code
+- **NVIDIA CUDA** — GPU kernels, device memory, synchronization, and the CUDA Runtime API
+- **NVIDIA Thrust** — high-level parallel algorithms and device containers
+- **`nvcc`** — CUDA compiler used to build `.cu` sources
+- **CMake** — build configuration for the laboratory projects
+- **CUDA C++20** — language standard configured by the lab CMake projects
 
 ## Requirements
 
 - An NVIDIA GPU with CUDA support
 - NVIDIA drivers compatible with the installed CUDA Toolkit
 - NVIDIA CUDA Toolkit, including `nvcc`
+- CMake 4.3 or newer for `Lab_2` and `Lab_3`
 - A supported C/C++ development environment
 
-The project can be built on Linux, Windows, or WSL, provided that the CUDA Toolkit and drivers are configured correctly.
+The projects can be built on Linux, Windows, or WSL when the CUDA Toolkit and drivers are configured correctly.
 
-## Building and running the template
+## Building the laboratory projects
 
-From the repository root, compile the CUDA source file with `nvcc`:
+Each laboratory directory contains its own `CMakeLists.txt`. From the selected project directory, configure and build with:
+
+```bash
+cmake -S . -B build
+cmake --build build
+```
+
+The introductory template can be compiled directly from the repository root:
 
 ```bash
 nvcc template.cu -o template
 ./template
 ```
 
-On Windows, run the generated executable as appropriate for your environment:
+On Windows:
 
 ```powershell
 nvcc template.cu -o template.exe
 .\template.exe
 ```
 
-The program should print the values after GPU processing:
+The template should print:
 
 ```text
 Wyniki po obliczeniach na GPU:
 0 2 4 6 8 10 12 14 16 18
 ```
 
-## CUDA concepts demonstrated
-
-The template is intentionally focused on the fundamentals needed for first CUDA programs:
-
-- **Host and device code** — `main` runs on the CPU, while `myKernel` runs on the GPU.
-- **Kernels** — functions marked with `__global__` are launched using CUDA's `<<<...>>>` syntax.
-- **Thread indexing** — each thread computes a unique position in the processed array.
-- **Grid and block configuration** — the number of blocks is calculated from the data size and the selected block size.
-- **Explicit memory management** — data is allocated with `malloc` on the host and `cudaMalloc` on the device.
-- **Memory transfers** — `cudaMemcpy` is used to transfer data in both directions.
-- **Error checking and synchronization** — CUDA API calls and kernel execution are checked explicitly.
-
-## Repository development
-
-As the course progresses, additional projects, exercises, and examples may be added. Each larger assignment should include its own build instructions and documentation where necessary.
-
 ## Notes
 
-This repository is intended primarily for university coursework, experimentation, and learning. The code may be extended or reorganized as new CUDA topics are introduced.
+This repository is intended primarily for university coursework, experimentation, and learning. Some directories contain exercises or project specifications that are still in development.
 
 ## License
 
